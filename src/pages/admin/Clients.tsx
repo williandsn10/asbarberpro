@@ -38,7 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Client {
   id: string;
-  user_id: string;
+  user_id: string | null;
   name: string;
   phone: string | null;
   email: string | null;
@@ -51,6 +51,7 @@ export default function Clients() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [isCreateMode, setIsCreateMode] = useState(false);
   const [formData, setFormData] = useState({ name: "", phone: "", email: "" });
 
   const queryClient = useQueryClient();
@@ -97,6 +98,29 @@ export default function Clients() {
     },
   });
 
+  const createMutation = useMutation({
+    mutationFn: async (data: { name: string; phone: string; email: string }) => {
+      const { error } = await supabase.from("profiles").insert({
+        name: data.name,
+        phone: data.phone || null,
+        email: data.email || null,
+        user_type: "client",
+        user_id: crypto.randomUUID(), // Generate a placeholder UUID for manual clients
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      toast({ title: "Cliente criado com sucesso!" });
+      handleCloseDialog();
+    },
+    onError: (error) => {
+      console.error("Create error:", error);
+      toast({ title: "Erro ao criar cliente", variant: "destructive" });
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async (data: { id: string; name: string; phone: string; email: string }) => {
       const { error } = await supabase
@@ -131,12 +155,21 @@ export default function Clients() {
       setIsDeleteDialogOpen(false);
       setSelectedClient(null);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Delete error:", error);
       toast({ title: "Erro ao remover cliente", variant: "destructive" });
     },
   });
 
+  const handleCreateClient = () => {
+    setIsCreateMode(true);
+    setSelectedClient(null);
+    setFormData({ name: "", phone: "", email: "" });
+    setIsDialogOpen(true);
+  };
+
   const handleEditClient = (client: Client) => {
+    setIsCreateMode(false);
     setSelectedClient(client);
     setFormData({
       name: client.name,
@@ -149,12 +182,21 @@ export default function Clients() {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedClient(null);
+    setIsCreateMode(false);
     setFormData({ name: "", phone: "", email: "" });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedClient) {
+    
+    if (!formData.name.trim()) {
+      toast({ title: "Nome é obrigatório", variant: "destructive" });
+      return;
+    }
+
+    if (isCreateMode) {
+      createMutation.mutate(formData);
+    } else if (selectedClient) {
       updateMutation.mutate({ id: selectedClient.id, ...formData });
     }
   };
@@ -167,6 +209,8 @@ export default function Clients() {
     return value;
   };
 
+  const isPending = createMutation.isPending || updateMutation.isPending;
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -176,6 +220,10 @@ export default function Clients() {
             Gerencie os clientes da barbearia
           </p>
         </div>
+        <Button onClick={handleCreateClient} className="bg-gradient-gold">
+          <Plus className="w-4 h-4 mr-2" />
+          Novo Cliente
+        </Button>
       </div>
 
       {/* Search */}
@@ -210,6 +258,14 @@ export default function Clients() {
             <div className="text-center py-8 text-muted-foreground">
               <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p>Nenhum cliente encontrado</p>
+              <Button 
+                onClick={handleCreateClient} 
+                variant="outline" 
+                className="mt-4"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar primeiro cliente
+              </Button>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -292,24 +348,29 @@ export default function Clients() {
         </CardContent>
       </Card>
 
-      {/* Edit Dialog */}
+      {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="glass-card">
           <DialogHeader>
-            <DialogTitle>Editar Cliente</DialogTitle>
+            <DialogTitle>
+              {isCreateMode ? "Novo Cliente" : "Editar Cliente"}
+            </DialogTitle>
             <DialogDescription>
-              Atualize as informações do cliente
+              {isCreateMode
+                ? "Preencha as informações do novo cliente"
+                : "Atualize as informações do cliente"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome</Label>
+                <Label htmlFor="name">Nome *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
+                  placeholder="Nome completo"
                   className="bg-secondary"
                 />
               </div>
@@ -319,6 +380,7 @@ export default function Clients() {
                   id="phone"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
+                  placeholder="(00) 00000-0000"
                   className="bg-secondary"
                 />
               </div>
@@ -329,6 +391,7 @@ export default function Clients() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="email@exemplo.com"
                   className="bg-secondary"
                 />
               </div>
@@ -337,9 +400,11 @@ export default function Clients() {
               <Button type="button" variant="outline" onClick={handleCloseDialog}>
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-gradient-gold" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? (
+              <Button type="submit" className="bg-gradient-gold" disabled={isPending}>
+                {isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
+                ) : isCreateMode ? (
+                  "Criar Cliente"
                 ) : (
                   "Salvar"
                 )}
