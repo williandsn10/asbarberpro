@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function Appointments() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
-  const [formData, setFormData] = useState({ client_id: "", service_id: "", barber_id: "", appointment_date: "", appointment_time: "", notes: "" });
+  const [formData, setFormData] = useState({ client_id: "", service_id: "", appointment_date: "", appointment_time: "", notes: "" });
   const [filterDate, setFilterDate] = useState(format(new Date(), "yyyy-MM-dd"));
   
   const queryClient = useQueryClient();
@@ -26,7 +26,7 @@ export default function Appointments() {
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ["appointments", filterDate],
     queryFn: async () => {
-      const { data, error } = await supabase.from("appointments").select(`*, client:profiles!appointments_client_id_fkey(name, phone), service:services(name, price), barber:barbers(name)`).eq("appointment_date", filterDate).order("appointment_time");
+      const { data, error } = await supabase.from("appointments").select(`*, client:profiles!appointments_client_id_fkey(name, phone), service:services(name, price)`).eq("appointment_date", filterDate).order("appointment_time");
       if (error) throw error;
       return data;
     },
@@ -34,7 +34,7 @@ export default function Appointments() {
 
   const { data: clients = [] } = useQuery({ queryKey: ["clients-list"], queryFn: async () => { const { data } = await supabase.from("profiles").select("id, name").eq("user_type", "client"); return data || []; } });
   const { data: services = [] } = useQuery({ queryKey: ["services-list"], queryFn: async () => { const { data } = await supabase.from("services").select("*"); return data || []; } });
-  const { data: barbers = [] } = useQuery({ queryKey: ["barbers-list"], queryFn: async () => { const { data } = await supabase.from("barbers").select("*").eq("is_active", true); return data || []; } });
+  
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => { const { error } = await supabase.from("appointments").insert(data); if (error) throw error; },
@@ -47,7 +47,7 @@ export default function Appointments() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["appointments"] }); toast({ title: "Status atualizado!" }); },
   });
 
-  const handleCloseDialog = () => { setIsDialogOpen(false); setSelectedAppointment(null); setFormData({ client_id: "", service_id: "", barber_id: "", appointment_date: "", appointment_time: "", notes: "" }); };
+  const handleCloseDialog = () => { setIsDialogOpen(false); setSelectedAppointment(null); setFormData({ client_id: "", service_id: "", appointment_date: "", appointment_time: "", notes: "" }); };
 
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); createMutation.mutate(formData); };
 
@@ -73,14 +73,14 @@ export default function Appointments() {
         <CardContent>
           {isLoading ? <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div> : appointments.length === 0 ? <div className="text-center py-8 text-muted-foreground"><Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" /><p>Nenhum agendamento</p></div> : (
             <Table>
-              <TableHeader><TableRow><TableHead>Horário</TableHead><TableHead>Cliente</TableHead><TableHead>Serviço</TableHead><TableHead>Barbeiro</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Horário</TableHead><TableHead>Cliente</TableHead><TableHead>Serviço</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
               <TableBody>
                 {appointments.map((apt: any) => (
                   <TableRow key={apt.id}>
                     <TableCell className="font-bold text-primary">{apt.appointment_time?.slice(0, 5)}</TableCell>
                     <TableCell>{apt.client?.name}</TableCell>
                     <TableCell>{apt.service?.name}</TableCell>
-                    <TableCell>{apt.barber?.name}</TableCell>
+                    
                     <TableCell>{getStatusBadge(apt.status)}</TableCell>
                     <TableCell className="text-right">
                       {apt.status === "scheduled" && <>
@@ -103,7 +103,7 @@ export default function Appointments() {
             <div className="space-y-4 py-4">
               <div className="space-y-2"><Label>Cliente</Label><Select value={formData.client_id} onValueChange={(v) => setFormData({ ...formData, client_id: v })}><SelectTrigger className="bg-secondary"><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{clients.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-2"><Label>Serviço</Label><Select value={formData.service_id} onValueChange={(v) => setFormData({ ...formData, service_id: v })}><SelectTrigger className="bg-secondary"><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{services.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.name} - R$ {s.price}</SelectItem>)}</SelectContent></Select></div>
-              <div className="space-y-2"><Label>Barbeiro</Label><Select value={formData.barber_id} onValueChange={(v) => setFormData({ ...formData, barber_id: v })}><SelectTrigger className="bg-secondary"><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{barbers.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Data</Label><Input type="date" value={formData.appointment_date} onChange={(e) => setFormData({ ...formData, appointment_date: e.target.value })} required className="bg-secondary" /></div>
                 <div className="space-y-2"><Label>Horário</Label><Input type="time" value={formData.appointment_time} onChange={(e) => setFormData({ ...formData, appointment_time: e.target.value })} required className="bg-secondary" /></div>
