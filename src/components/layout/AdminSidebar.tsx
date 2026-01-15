@@ -22,6 +22,7 @@ import {
   Calendar,
   LogOut,
   Menu,
+  Shield,
 } from "lucide-react";
 
 const menuItems = [
@@ -29,6 +30,7 @@ const menuItems = [
   { title: "Clientes", url: "/admin/clientes", icon: Users },
   { title: "Serviços", url: "/admin/servicos", icon: Scissors },
   { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar },
+  { title: "Usuários", url: "/admin/usuarios", icon: Shield },
 ];
 
 export function AdminSidebar() {

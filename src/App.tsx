@@ -13,6 +13,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import Clients from "./pages/admin/Clients";
 import Services from "./pages/admin/Services";
 import Appointments from "./pages/admin/Appointments";
+import Users from "./pages/admin/Users";
 import ClientDashboard from "./pages/client/Dashboard";
 import BookAppointment from "./pages/client/BookAppointment";
 import MyAppointments from "./pages/client/MyAppointments";
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="clientes" element={<Clients />} />
               <Route path="servicos" element={<Services />} />
               <Route path="agendamentos" element={<Appointments />} />
+              <Route path="usuarios" element={<Users />} />
             </Route>
 
             {/* Client Routes */}
