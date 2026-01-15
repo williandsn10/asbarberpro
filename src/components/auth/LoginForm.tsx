@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -8,18 +8,22 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Scissors, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-interface LoginFormProps {
-  redirectTo?: string;
-}
-
-export function LoginForm({ redirectTo = "/" }: LoginFormProps) {
+export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const { signIn, isAdmin, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirecionar após login bem-sucedido quando o perfil carregar
+  useEffect(() => {
+    if (loginSuccess && profile) {
+      navigate(isAdmin ? "/admin" : "/cliente", { replace: true });
+    }
+  }, [loginSuccess, profile, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +46,7 @@ export function LoginForm({ redirectTo = "/" }: LoginFormProps) {
       description: "Login realizado com sucesso.",
     });
 
-    navigate(redirectTo);
+    setLoginSuccess(true);
   };
 
   return (
