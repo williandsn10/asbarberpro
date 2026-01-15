@@ -13,17 +13,19 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false);
-  const { signIn, isAdmin, profile } = useAuth();
+  const [awaitingRedirect, setAwaitingRedirect] = useState(false);
+  const { signIn, isAdmin, profile, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Redirecionar após login bem-sucedido quando o perfil carregar
+  // Redirecionar após login bem-sucedido quando o perfil e isAdmin carregarem
   useEffect(() => {
-    if (loginSuccess && profile) {
-      navigate(isAdmin ? "/admin" : "/cliente", { replace: true });
+    if (awaitingRedirect && profile && !authLoading) {
+      const destination = isAdmin ? "/admin" : "/cliente";
+      console.log("Redirecionando para:", destination, "| isAdmin:", isAdmin);
+      navigate(destination, { replace: true });
     }
-  }, [loginSuccess, profile, isAdmin, navigate]);
+  }, [awaitingRedirect, profile, isAdmin, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +48,7 @@ export function LoginForm() {
       description: "Login realizado com sucesso.",
     });
 
-    setLoginSuccess(true);
+    setAwaitingRedirect(true);
   };
 
   return (
@@ -108,12 +110,12 @@ export function LoginForm() {
             <Button
               type="submit"
               className="w-full bg-gradient-gold hover:opacity-90 text-primary-foreground font-semibold"
-              disabled={isLoading}
+              disabled={isLoading || awaitingRedirect}
             >
-              {isLoading ? (
+              {isLoading || awaitingRedirect ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entrando...
+                  {awaitingRedirect ? "Carregando perfil..." : "Entrando..."}
                 </>
               ) : (
                 "Entrar"
