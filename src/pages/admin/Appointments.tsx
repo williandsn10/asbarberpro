@@ -43,8 +43,12 @@ export default function Appointments() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: "scheduled" | "completed" | "cancelled" }) => { const { error } = await supabase.from("appointments").update({ status }).eq("id", id); if (error) throw error; },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["appointments"] }); toast({ title: "Status atualizado!" }); },
+    mutationFn: async ({ id, status }: { id: string; status: "pending" | "scheduled" | "completed" | "cancelled" }) => { const { error } = await supabase.from("appointments").update({ status }).eq("id", id); if (error) throw error; },
+    onSuccess: (_, variables) => { 
+      queryClient.invalidateQueries({ queryKey: ["appointments"] }); 
+      const messages: Record<string, string> = { scheduled: "Agendamento aceito!", completed: "Agendamento concluído!", cancelled: "Agendamento cancelado!" };
+      toast({ title: messages[variables.status] || "Status atualizado!" }); 
+    },
   });
 
   const handleCloseDialog = () => { setIsDialogOpen(false); setSelectedAppointment(null); setFormData({ client_id: "", service_id: "", appointment_date: "", appointment_time: "", notes: "" }); };
@@ -52,8 +56,8 @@ export default function Appointments() {
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); createMutation.mutate(formData); };
 
   const getStatusBadge = (status: string) => {
-    const styles: Record<string, string> = { scheduled: "bg-blue-500/20 text-blue-400", completed: "bg-green-500/20 text-green-400", cancelled: "bg-red-500/20 text-red-400" };
-    const labels: Record<string, string> = { scheduled: "Agendado", completed: "Concluído", cancelled: "Cancelado" };
+    const styles: Record<string, string> = { pending: "bg-yellow-500/20 text-yellow-400", scheduled: "bg-blue-500/20 text-blue-400", completed: "bg-green-500/20 text-green-400", cancelled: "bg-red-500/20 text-red-400" };
+    const labels: Record<string, string> = { pending: "Pendente", scheduled: "Confirmado", completed: "Concluído", cancelled: "Cancelado" };
     return <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}>{labels[status]}</span>;
   };
 
@@ -83,9 +87,13 @@ export default function Appointments() {
                     
                     <TableCell>{getStatusBadge(apt.status)}</TableCell>
                     <TableCell className="text-right">
+                      {apt.status === "pending" && <>
+                        <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "scheduled" })} className="text-green-500" title="Aceitar"><CheckCircle className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "cancelled" })} className="text-destructive" title="Recusar"><XCircle className="w-4 h-4" /></Button>
+                      </>}
                       {apt.status === "scheduled" && <>
-                        <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "completed" })} className="text-green-500"><CheckCircle className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "cancelled" })} className="text-destructive"><XCircle className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "completed" })} className="text-green-500" title="Concluir"><CheckCircle className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "cancelled" })} className="text-destructive" title="Cancelar"><XCircle className="w-4 h-4" /></Button>
                       </>}
                     </TableCell>
                   </TableRow>

@@ -33,11 +33,11 @@ export default function BookAppointment() {
       const { error } = await supabase.from("appointments").insert({ client_id: profile.id, service_id: formData.service_id, barber_id: barber.id, appointment_date: formData.appointment_date, appointment_time: formData.appointment_time, notes: formData.notes || null });
       if (error) throw error;
     },
-    onSuccess: () => { setSuccess(true); queryClient.invalidateQueries({ queryKey: ["my-appointments"] }); toast({ title: "Agendamento confirmado!" }); setTimeout(() => navigate("/cliente/meus-agendamentos"), 2000); },
+    onSuccess: () => { setSuccess(true); queryClient.invalidateQueries({ queryKey: ["my-appointments"] }); toast({ title: "Agendamento enviado!", description: "Aguardando confirmação do barbeiro." }); setTimeout(() => navigate("/cliente/meus-agendamentos"), 2000); },
     onError: () => toast({ title: "Erro ao agendar", variant: "destructive" }),
   });
 
-  if (success) return <div className="flex flex-col items-center justify-center py-20 animate-fade-in"><CheckCircle className="w-20 h-20 text-green-500 mb-4" /><h2 className="text-2xl font-bold mb-2">Agendamento Confirmado!</h2><p className="text-muted-foreground">Redirecionando...</p></div>;
+  if (success) return <div className="flex flex-col items-center justify-center py-20 animate-fade-in"><Clock className="w-20 h-20 text-yellow-500 mb-4" /><h2 className="text-2xl font-bold mb-2">Agendamento Enviado!</h2><p className="text-muted-foreground">Aguardando confirmação do barbeiro...</p></div>;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">

@@ -30,8 +30,8 @@ export default function MyAppointments() {
   });
 
   const getStatusBadge = (status: string) => {
-    const styles: Record<string, string> = { scheduled: "bg-blue-500/20 text-blue-400", completed: "bg-green-500/20 text-green-400", cancelled: "bg-red-500/20 text-red-400" };
-    const labels: Record<string, string> = { scheduled: "Agendado", completed: "Concluído", cancelled: "Cancelado" };
+    const styles: Record<string, string> = { pending: "bg-yellow-500/20 text-yellow-400", scheduled: "bg-blue-500/20 text-blue-400", completed: "bg-green-500/20 text-green-400", cancelled: "bg-red-500/20 text-red-400" };
+    const labels: Record<string, string> = { pending: "Aguardando", scheduled: "Confirmado", completed: "Concluído", cancelled: "Cancelado" };
     return <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}>{labels[status]}</span>;
   };
 
@@ -49,7 +49,7 @@ export default function MyAppointments() {
                   <div className="text-center min-w-[60px]"><p className="font-bold text-primary">{format(new Date(apt.appointment_date + "T12:00:00"), "dd/MM", { locale: ptBR })}</p><p className="text-sm">{apt.appointment_time?.slice(0, 5)}</p></div>
                   <div><p className="font-medium">{apt.service?.name}</p><p className="text-sm text-muted-foreground">{apt.barber?.name} • R$ {apt.service?.price.toFixed(2)}</p></div>
                 </div>
-                <div className="flex items-center gap-2">{getStatusBadge(apt.status)}{apt.status === "scheduled" && <Button variant="ghost" size="icon" onClick={() => cancelMutation.mutate(apt.id)} className="text-destructive"><XCircle className="w-4 h-4" /></Button>}</div>
+                <div className="flex items-center gap-2">{getStatusBadge(apt.status)}{(apt.status === "scheduled" || apt.status === "pending") && <Button variant="ghost" size="icon" onClick={() => cancelMutation.mutate(apt.id)} className="text-destructive"><XCircle className="w-4 h-4" /></Button>}</div>
               </div>
             ))}</div>
           )}
