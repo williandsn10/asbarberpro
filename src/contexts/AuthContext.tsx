@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
@@ -59,10 +60,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const checkAdminRole = async (userId: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error checking admin role:", error);
+        return false;
+      }
+
+      return !!data;
+    } catch (error) {
+      console.error("Error checking admin role:", error);
+      return false;
+    }
+  };
+
   const refreshProfile = async () => {
     if (user) {
       const profileData = await fetchProfile(user.id);
       setProfile(profileData);
+      const adminStatus = await checkAdminRole(user.id);
+      setIsAdmin(adminStatus);
     }
   };
 
@@ -78,10 +102,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(async () => {
             const profileData = await fetchProfile(newSession.user.id);
             setProfile(profileData);
+            const adminStatus = await checkAdminRole(newSession.user.id);
+            setIsAdmin(adminStatus);
             setIsLoading(false);
           }, 0);
         } else {
           setProfile(null);
+          setIsAdmin(false);
           setIsLoading(false);
         }
       }
@@ -93,8 +120,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(existingSession?.user ?? null);
 
       if (existingSession?.user) {
-        fetchProfile(existingSession.user.id).then((profileData) => {
+        Promise.all([
+          fetchProfile(existingSession.user.id),
+          checkAdminRole(existingSession.user.id)
+        ]).then(([profileData, adminStatus]) => {
           setProfile(profileData);
+          setIsAdmin(adminStatus);
           setIsLoading(false);
         });
       } else {
@@ -161,9 +192,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setSession(null);
     setProfile(null);
+    setIsAdmin(false);
   };
-
-  const isAdmin = profile?.user_type === "admin";
 
   return (
     <AuthContext.Provider
