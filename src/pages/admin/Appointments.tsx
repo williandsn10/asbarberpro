@@ -66,26 +66,26 @@ export default function Appointments() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gradient-gold">Agendamentos</h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">Gerencie os horários marcados</p>
+          <p className="text-muted-foreground mt-1 text-sm hidden sm:block">Gerencie os horários marcados</p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-gold w-full sm:w-auto">
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Agendamento
+        <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-gold h-11 px-3 sm:px-4">
+          <Plus className="w-5 h-5 sm:mr-2" />
+          <span className="hidden sm:inline">Novo Agendamento</span>
         </Button>
       </div>
 
       <Card className="glass-card">
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-            <Label className="text-sm">Data:</Label>
+        <CardContent className="pt-4 pb-4 sm:pt-6 sm:pb-6">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Label className="text-sm whitespace-nowrap">Data:</Label>
             <Input 
               type="date" 
               value={filterDate} 
               onChange={(e) => setFilterDate(e.target.value)} 
-              className="w-full sm:w-auto bg-secondary" 
+              className="flex-1 sm:flex-none sm:w-auto h-11 bg-secondary" 
             />
           </div>
         </CardContent>
@@ -109,7 +109,7 @@ export default function Appointments() {
               <p>Nenhum agendamento</p>
             </div>
           ) : isMobile ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {appointments.map((apt: any) => (
                 <MobileAppointmentCard
                   key={apt.id}
