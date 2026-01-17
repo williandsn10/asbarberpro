@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import logo from "@/assets/logo.png";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -55,6 +56,11 @@ export default function ForgotPassword() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar ao login
           </Link>
+
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <img src={logo} alt="BarberPro" className="w-20 h-20 object-contain" />
+          </div>
 
           {/* Title */}
           <h1 className="text-4xl sm:text-5xl font-bold italic text-center mb-4 text-foreground">

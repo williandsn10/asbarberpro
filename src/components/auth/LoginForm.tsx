@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import logo from "@/assets/logo.png";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -81,6 +82,11 @@ export function LoginForm() {
         <div className="hidden lg:block absolute inset-0 bg-mesh-gradient opacity-50" />
         
         <div className="w-full max-w-md relative z-10 animate-fade-in">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <img src={logo} alt="BarberPro" className="w-20 h-20 object-contain" />
+          </div>
+          
           {/* Title */}
           <h1 className="text-4xl sm:text-5xl font-bold italic text-center mb-10 text-foreground">
             Entrar
