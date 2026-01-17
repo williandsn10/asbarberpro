@@ -3,9 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Bell } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function useRealtimeAppointments() {
   const queryClient = useQueryClient();
+  const { profile } = useAuth();
   const isFirstLoadRef = useRef(true);
 
   useEffect(() => {
@@ -60,6 +62,23 @@ export function useRealtimeAppointments() {
             } catch (e) {
               // Audio not available
             }
+
+            // Send push notifications to other admins
+            // This admin already received the toast, so we exclude them
+            try {
+              await supabase.functions.invoke("notify-admins-new-booking", {
+                body: {
+                  appointment_id: payload.new.id,
+                  client_name: clientName,
+                  service_name: serviceName,
+                  date,
+                  time,
+                  exclude_user_id: profile?.id, // Don't notify the current admin
+                },
+              });
+            } catch (e) {
+              console.error("Error sending push notifications:", e);
+            }
           }
 
           // Invalidate queries to refresh data
@@ -79,5 +98,5 @@ export function useRealtimeAppointments() {
       clearTimeout(timer);
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, profile?.id]);
 }

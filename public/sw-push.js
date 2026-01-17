@@ -53,19 +53,33 @@ self.addEventListener("notificationclick", (event) => {
     return;
   }
 
+  // Determine the URL based on notification type
+  const notificationData = event.notification.data || {};
+  let targetUrl = "/cliente/meus-agendamentos"; // Default for clients
+  
+  // If this is a new appointment notification for admins, redirect to admin page
+  if (notificationData.type === "new_appointment") {
+    targetUrl = notificationData.url || "/admin/agendamentos";
+  } else if (notificationData.url) {
+    targetUrl = notificationData.url;
+  }
+
   // Open the app
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       // Check if app is already open
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && "focus" in client) {
+          // Navigate to the target URL if different
+          if (!client.url.endsWith(targetUrl)) {
+            client.navigate(targetUrl);
+          }
           return client.focus();
         }
       }
       // Open new window
       if (clients.openWindow) {
-        const url = event.notification.data?.url || "/cliente/meus-agendamentos";
-        return clients.openWindow(url);
+        return clients.openWindow(targetUrl);
       }
     })
   );
