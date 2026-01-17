@@ -372,6 +372,44 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
+      {/* Today's Appointments - Moved to top */}
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-primary" />
+            Agenda de Hoje
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {todayAppointments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Calendar className="w-10 h-10 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Nenhum agendamento para hoje</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {todayAppointments.map((appointment: any) => (
+                <div
+                  key={appointment.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-primary">
+                      {appointment.appointment_time?.slice(0, 5)}
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium">{appointment.client?.name}</p>
+                      <p className="text-xs text-muted-foreground">{appointment.service?.name}</p>
+                    </div>
+                  </div>
+                  {getStatusBadge(appointment.status)}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue Chart */}
@@ -447,8 +485,8 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Second Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Second Charts Row - Now only 2 items */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Popular Services */}
         <Card className="glass-card">
           <CardHeader>
@@ -543,49 +581,6 @@ export default function AdminDashboard() {
             <p className="text-xs text-muted-foreground mt-1">
               {cancellationRate < 10 ? "Excelente!" : cancellationRate < 20 ? "Bom" : "Atenção necessária"}
             </p>
-          </CardContent>
-        </Card>
-
-        {/* Today's Appointments (compact) */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-primary" />
-              Agenda de Hoje
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="max-h-[280px] overflow-y-auto">
-            {todayAppointments.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Calendar className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Nenhum agendamento</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {todayAppointments.slice(0, 5).map((appointment: any) => (
-                  <div
-                    key={appointment.id}
-                    className="flex items-center justify-between p-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-bold text-primary">
-                        {appointment.appointment_time?.slice(0, 5)}
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium">{appointment.client?.name}</p>
-                        <p className="text-xs text-muted-foreground">{appointment.service?.name}</p>
-                      </div>
-                    </div>
-                    {getStatusBadge(appointment.status)}
-                  </div>
-                ))}
-                {todayAppointments.length > 5 && (
-                  <p className="text-xs text-center text-muted-foreground pt-2">
-                    +{todayAppointments.length - 5} mais
-                  </p>
-                )}
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
