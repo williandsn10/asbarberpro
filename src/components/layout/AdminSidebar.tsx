@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
   Users,
@@ -44,6 +47,21 @@ export function AdminSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
+  // Query para buscar contagem de agendamentos pendentes
+  const { data: pendingCount = 0 } = useQuery({
+    queryKey: ['pending-appointments-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('appointments')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      
+      if (error) throw error;
+      return count || 0;
+    },
+    refetchInterval: 30000, // Atualiza a cada 30 segundos
+  });
+
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="border-b border-sidebar-border p-4">
@@ -65,12 +83,17 @@ export function AdminSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => {
                 const isActive = location.pathname === item.url;
+                const isAgendamentos = item.url === "/admin/agendamentos";
+                const tooltipText = isAgendamentos && pendingCount > 0
+                  ? `${item.title} (${pendingCount} pendente${pendingCount > 1 ? 's' : ''})`
+                  : item.title;
+                
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
                       isActive={isActive}
-                      tooltip={item.title}
+                      tooltip={tooltipText}
                     >
                       <Link
                         to={item.url}
@@ -81,6 +104,14 @@ export function AdminSidebar() {
                       >
                         <item.icon className="w-5 h-5" />
                         <span>{item.title}</span>
+                        {isAgendamentos && pendingCount > 0 && !collapsed && (
+                          <Badge 
+                            variant="destructive" 
+                            className="ml-auto h-5 min-w-[20px] px-1.5 text-xs animate-pulse"
+                          >
+                            {pendingCount}
+                          </Badge>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
