@@ -84,6 +84,19 @@ export default function BookAppointment() {
     },
   });
 
+  // Buscar dias fechados da semana
+  const { data: closedDays = [] } = useQuery({
+    queryKey: ["settings", "closed_days"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("settings")
+        .select("*")
+        .eq("key", "closed_days")
+        .maybeSingle();
+      return (data?.value as number[]) || [];
+    },
+  });
+
   // Gerar slots baseado nas configurações
   const allTimeSlots = useMemo(() => {
     const settings = workingHoursSettings || { opening_time: "08:00", closing_time: "19:00", slot_interval: 30 };
@@ -119,6 +132,14 @@ export default function BookAppointment() {
     enabled: !!formData.appointment_date,
   });
 
+  // Verificar se o dia da semana está fechado
+  const isDayOfWeekClosed = useMemo(() => {
+    if (!formData.appointment_date) return false;
+    const selectedDate = new Date(formData.appointment_date + "T00:00:00");
+    const dayOfWeek = selectedDate.getDay();
+    return closedDays.includes(dayOfWeek);
+  }, [formData.appointment_date, closedDays]);
+
   // Verificar se a data inteira está bloqueada
   const isFullDayBlocked = useMemo(() => {
     return blockedTimes.some((block: any) => block.is_full_day);
@@ -126,7 +147,7 @@ export default function BookAppointment() {
 
   // Filtrar horários disponíveis
   const availableSlots = useMemo(() => {
-    if (!formData.appointment_date || isFullDayBlocked) return [];
+    if (!formData.appointment_date || isFullDayBlocked || isDayOfWeekClosed) return [];
 
     return allTimeSlots.filter((slot) => {
       // Verificar se está em período bloqueado
@@ -146,7 +167,7 @@ export default function BookAppointment() {
 
       return !isBlocked && !isBooked;
     });
-  }, [formData.appointment_date, blockedTimes, existingAppointments, isFullDayBlocked, allTimeSlots]);
+  }, [formData.appointment_date, blockedTimes, existingAppointments, isFullDayBlocked, isDayOfWeekClosed, allTimeSlots]);
 
   const selectedService = services.find((s: any) => s.id === formData.service_id);
 
@@ -264,7 +285,16 @@ export default function BookAppointment() {
             {formData.appointment_date && (
               <div className="space-y-2">
                 <Label>Horário Disponível</Label>
-                {isFullDayBlocked ? (
+                {isDayOfWeekClosed ? (
+                  <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-center">
+                    <p className="text-destructive font-medium">
+                      A barbearia não funciona neste dia da semana
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Por favor, escolha outro dia
+                    </p>
+                  </div>
+                ) : isFullDayBlocked ? (
                   <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-center">
                     <p className="text-destructive font-medium">
                       Este dia não está disponível para agendamentos
