@@ -6,8 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings as SettingsIcon, Clock, Loader2, Save } from "lucide-react";
+import { Clock, Loader2, Save, AlertTriangle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface WorkingHours {
   opening_time: string;
@@ -23,6 +34,8 @@ export default function Settings() {
     closing_time: "19:00",
     slot_interval: 30,
   });
+  const [confirmText, setConfirmText] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<string | null>(null);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["settings", "working_hours"],
@@ -65,10 +78,126 @@ export default function Settings() {
     },
   });
 
+  // Delete mutations
+  const deleteAppointmentsMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("appointments").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      toast({ title: "Todos os agendamentos foram excluídos!" });
+      setDeleteDialogOpen(null);
+    },
+    onError: () => {
+      toast({ title: "Erro ao excluir agendamentos", variant: "destructive" });
+    },
+  });
+
+  const deleteServicesMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("services").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      toast({ title: "Todos os serviços foram excluídos!" });
+      setDeleteDialogOpen(null);
+    },
+    onError: () => {
+      toast({ title: "Erro ao excluir serviços", variant: "destructive" });
+    },
+  });
+
+  const deleteBarbersMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("barbers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["barbers"] });
+      toast({ title: "Todos os barbeiros foram excluídos!" });
+      setDeleteDialogOpen(null);
+    },
+    onError: () => {
+      toast({ title: "Erro ao excluir barbeiros", variant: "destructive" });
+    },
+  });
+
+  const deleteBlockedTimesMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("blocked_times").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["blocked-times"] });
+      toast({ title: "Todos os bloqueios foram excluídos!" });
+      setDeleteDialogOpen(null);
+    },
+    onError: () => {
+      toast({ title: "Erro ao excluir bloqueios", variant: "destructive" });
+    },
+  });
+
+  const resetAllMutation = useMutation({
+    mutationFn: async () => {
+      // Delete in order to respect foreign keys
+      const { error: appointmentsError } = await supabase.from("appointments").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (appointmentsError) throw appointmentsError;
+      
+      const { error: blockedError } = await supabase.from("blocked_times").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (blockedError) throw blockedError;
+      
+      const { error: servicesError } = await supabase.from("services").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (servicesError) throw servicesError;
+      
+      const { error: barbersError } = await supabase.from("barbers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (barbersError) throw barbersError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast({ title: "Todos os dados foram resetados!" });
+      setDeleteDialogOpen(null);
+      setConfirmText("");
+    },
+    onError: () => {
+      toast({ title: "Erro ao resetar dados", variant: "destructive" });
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateMutation.mutate(formData);
   };
+
+  const handleDeleteConfirm = (type: string) => {
+    switch (type) {
+      case "appointments":
+        deleteAppointmentsMutation.mutate();
+        break;
+      case "services":
+        deleteServicesMutation.mutate();
+        break;
+      case "barbers":
+        deleteBarbersMutation.mutate();
+        break;
+      case "blocked_times":
+        deleteBlockedTimesMutation.mutate();
+        break;
+      case "reset_all":
+        if (confirmText === "CONFIRMAR") {
+          resetAllMutation.mutate();
+        }
+        break;
+    }
+  };
+
+  const isDeleting = 
+    deleteAppointmentsMutation.isPending || 
+    deleteServicesMutation.isPending || 
+    deleteBarbersMutation.isPending || 
+    deleteBlockedTimesMutation.isPending || 
+    resetAllMutation.isPending;
 
   // Generate time options for select
   const generateTimeOptions = () => {
@@ -196,6 +325,202 @@ export default function Settings() {
               Salvar Configurações
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card className="glass-card max-w-2xl border-destructive/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="w-5 h-5" />
+            Zona de Perigo
+          </CardTitle>
+          <CardDescription>
+            Ações irreversíveis - use com extremo cuidado
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Delete Appointments */}
+          <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 border border-destructive/20">
+            <div>
+              <h4 className="font-medium">Limpar Agendamentos</h4>
+              <p className="text-sm text-muted-foreground">Remove todos os agendamentos do sistema</p>
+            </div>
+            <AlertDialog open={deleteDialogOpen === "appointments"} onOpenChange={(open) => setDeleteDialogOpen(open ? "appointments" : null)}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={isDeleting}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Limpar
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Excluir todos os agendamentos?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação é <strong>irreversível</strong>. Todos os agendamentos (passados e futuros) serão permanentemente excluídos.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => handleDeleteConfirm("appointments")}
+                    className="bg-destructive hover:bg-destructive/90"
+                  >
+                    {deleteAppointmentsMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Excluir Tudo"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
+          {/* Delete Services */}
+          <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 border border-destructive/20">
+            <div>
+              <h4 className="font-medium">Limpar Serviços</h4>
+              <p className="text-sm text-muted-foreground">Remove todos os serviços cadastrados</p>
+            </div>
+            <AlertDialog open={deleteDialogOpen === "services"} onOpenChange={(open) => setDeleteDialogOpen(open ? "services" : null)}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={isDeleting}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Limpar
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Excluir todos os serviços?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação é <strong>irreversível</strong>. Todos os serviços serão permanentemente excluídos.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => handleDeleteConfirm("services")}
+                    className="bg-destructive hover:bg-destructive/90"
+                  >
+                    {deleteServicesMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Excluir Tudo"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
+          {/* Delete Barbers */}
+          <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 border border-destructive/20">
+            <div>
+              <h4 className="font-medium">Limpar Barbeiros</h4>
+              <p className="text-sm text-muted-foreground">Remove todos os barbeiros cadastrados</p>
+            </div>
+            <AlertDialog open={deleteDialogOpen === "barbers"} onOpenChange={(open) => setDeleteDialogOpen(open ? "barbers" : null)}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={isDeleting}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Limpar
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Excluir todos os barbeiros?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação é <strong>irreversível</strong>. Todos os barbeiros serão permanentemente excluídos.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => handleDeleteConfirm("barbers")}
+                    className="bg-destructive hover:bg-destructive/90"
+                  >
+                    {deleteBarbersMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Excluir Tudo"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
+          {/* Delete Blocked Times */}
+          <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 border border-destructive/20">
+            <div>
+              <h4 className="font-medium">Limpar Bloqueios</h4>
+              <p className="text-sm text-muted-foreground">Remove todos os bloqueios de datas</p>
+            </div>
+            <AlertDialog open={deleteDialogOpen === "blocked_times"} onOpenChange={(open) => setDeleteDialogOpen(open ? "blocked_times" : null)}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={isDeleting}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Limpar
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Excluir todos os bloqueios?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação é <strong>irreversível</strong>. Todos os bloqueios de datas serão permanentemente excluídos.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => handleDeleteConfirm("blocked_times")}
+                    className="bg-destructive hover:bg-destructive/90"
+                  >
+                    {deleteBlockedTimesMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Excluir Tudo"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
+          {/* Reset All */}
+          <div className="flex items-center justify-between p-4 rounded-lg bg-destructive/10 border border-destructive">
+            <div>
+              <h4 className="font-medium text-destructive">⚠️ RESET TOTAL</h4>
+              <p className="text-sm text-muted-foreground">Apaga TODOS os dados (exceto admins e configurações)</p>
+            </div>
+            <AlertDialog open={deleteDialogOpen === "reset_all"} onOpenChange={(open) => {
+              setDeleteDialogOpen(open ? "reset_all" : null);
+              if (!open) setConfirmText("");
+            }}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={isDeleting}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  RESET
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-destructive">⚠️ RESET TOTAL DO SISTEMA</AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-3">
+                    <p>Esta ação é <strong>IRREVERSÍVEL</strong> e irá excluir:</p>
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                      <li>Todos os agendamentos</li>
+                      <li>Todos os serviços</li>
+                      <li>Todos os barbeiros</li>
+                      <li>Todos os bloqueios de datas</li>
+                    </ul>
+                    <p className="font-medium">Para confirmar, digite "CONFIRMAR" abaixo:</p>
+                    <Input
+                      value={confirmText}
+                      onChange={(e) => setConfirmText(e.target.value)}
+                      placeholder="Digite CONFIRMAR"
+                      className="mt-2"
+                    />
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => handleDeleteConfirm("reset_all")}
+                    className="bg-destructive hover:bg-destructive/90"
+                    disabled={confirmText !== "CONFIRMAR" || resetAllMutation.isPending}
+                  >
+                    {resetAllMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "RESETAR TUDO"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </CardContent>
       </Card>
     </div>
