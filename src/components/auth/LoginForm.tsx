@@ -6,70 +6,64 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
-
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const {
+    signIn
+  } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    const { error } = await signIn(email, password);
-
+    const {
+      error
+    } = await signIn(email, password);
     if (error) {
       toast({
         title: "Erro ao entrar",
         description: "E-mail ou senha incorretos.",
-        variant: "destructive",
+        variant: "destructive"
       });
       setIsLoading(false);
       return;
     }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (user) {
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      
+      const {
+        data: roleData
+      } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
       const userIsAdmin = !!roleData;
-      
       toast({
         title: "Bem-vindo!",
-        description: "Login realizado com sucesso.",
+        description: "Login realizado com sucesso."
       });
-
-      navigate(userIsAdmin ? "/admin" : "/cliente", { replace: true });
+      navigate(userIsAdmin ? "/admin" : "/cliente", {
+        replace: true
+      });
     } else {
       toast({
         title: "Erro",
         description: "Não foi possível obter dados do usuário.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
-    
     setIsLoading(false);
   };
-
-  return (
-    <div className="min-h-screen flex relative">
+  return <div className="min-h-screen flex relative">
       {/* Background image - visible only on mobile */}
-      <div 
-        className="absolute inset-0 lg:hidden bg-cover bg-center"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=1200&q=80')`,
-        }}
-      >
+      <div className="absolute inset-0 lg:hidden bg-cover bg-center" style={{
+      backgroundImage: `url('https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=1200&q=80')`
+    }}>
         {/* Dark overlay for readability */}
         <div className="absolute inset-0 bg-background/85" />
       </div>
@@ -84,7 +78,7 @@ export function LoginForm() {
         <div className="w-full max-w-md relative z-10 animate-fade-in">
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <img src={logo} alt="BarberPro" className="w-20 h-20 object-contain" />
+            <img alt="BarberPro" className="w-20 h-20 object-contain" src="/lovable-uploads/bdb7b21d-bfe1-49b9-81eb-ee1eeac51494.png" />
           </div>
           
           {/* Title */}
@@ -95,70 +89,37 @@ export function LoginForm() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email input */}
-            <input
-              type="email"
-              placeholder="E-mail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full h-14 px-4 bg-transparent border border-muted-foreground/30 
+            <input type="email" placeholder="E-mail" value={email} onChange={e => setEmail(e.target.value)} required className="w-full h-14 px-4 bg-transparent border border-muted-foreground/30 
                          rounded-lg focus:border-primary/50 focus:outline-none transition-colors
-                         text-foreground placeholder:text-muted-foreground"
-            />
+                         text-foreground placeholder:text-muted-foreground" />
 
             {/* Password input with toggle */}
             <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full h-14 px-4 pr-12 bg-transparent border border-muted-foreground/30 
+              <input type={showPassword ? "text" : "password"} placeholder="Senha" value={password} onChange={e => setPassword(e.target.value)} required className="w-full h-14 px-4 pr-12 bg-transparent border border-muted-foreground/30 
                            rounded-lg focus:border-primary/50 focus:outline-none transition-colors
-                           text-foreground placeholder:text-muted-foreground"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                tabIndex={-1}
-              >
+                           text-foreground placeholder:text-muted-foreground" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
 
             {/* Forgot password - centered */}
-            <Link 
-              to="/esqueci-senha" 
-              className="block text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <Link to="/esqueci-senha" className="block text-center text-sm text-muted-foreground hover:text-foreground transition-colors">
               Esqueceu sua senha?
             </Link>
 
             {/* Submit button */}
-            <Button
-              type="submit"
-              className="w-full h-12 rounded-lg bg-muted-foreground/80 hover:bg-muted-foreground text-background font-semibold"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
+            <Button type="submit" className="w-full h-12 rounded-lg bg-muted-foreground/80 hover:bg-muted-foreground text-background font-semibold" disabled={isLoading}>
+              {isLoading ? <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Entrando...
-                </>
-              ) : (
-                "Entrar"
-              )}
+                </> : "Entrar"}
             </Button>
 
             {/* Register link */}
             <p className="text-sm text-muted-foreground text-center pt-2">
               Não tem uma conta?{" "}
-              <Link 
-                to="/cadastro" 
-                className="text-primary hover:underline font-medium"
-              >
+              <Link to="/cadastro" className="text-primary hover:underline font-medium">
                 Cadastre-se
               </Link>
             </p>
@@ -168,11 +129,7 @@ export function LoginForm() {
 
       {/* Right side - Image (hidden on mobile) */}
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        <img
-          src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=1200&q=80"
-          alt="Barbearia moderna"
-          className="w-full h-full object-cover"
-        />
+        <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=1200&q=80" alt="Barbearia moderna" className="w-full h-full object-cover" />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
         
@@ -187,6 +144,5 @@ export function LoginForm() {
           <p className="text-primary mt-2 font-medium">— BarberPro</p>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
