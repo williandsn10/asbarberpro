@@ -8,9 +8,10 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
-  const { user, profile, isLoading, isAdmin } = useAuth();
+  const { user, profile, isLoading, isAdmin, isAdminLoading } = useAuth();
 
-  if (isLoading) {
+  // Aguardar carregamento completo - se requireAdmin, também aguardar isAdminLoading
+  if (isLoading || (requireAdmin && isAdminLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
