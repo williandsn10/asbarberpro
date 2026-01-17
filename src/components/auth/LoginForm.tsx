@@ -61,11 +61,24 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex relative">
+      {/* Background image - visible only on mobile */}
+      <div 
+        className="absolute inset-0 lg:hidden bg-cover bg-center"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=1200&q=80')`,
+        }}
+      >
+        {/* Dark overlay for readability */}
+        <div className="absolute inset-0 bg-background/85" />
+      </div>
+
       {/* Left side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 bg-background relative">
-        {/* Subtle gradient background */}
-        <div className="absolute inset-0 bg-mesh-gradient opacity-50" />
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 relative">
+        {/* Background for desktop only */}
+        <div className="hidden lg:block absolute inset-0 bg-background" />
+        {/* Subtle gradient background - desktop only */}
+        <div className="hidden lg:block absolute inset-0 bg-mesh-gradient opacity-50" />
         
         <div className="w-full max-w-md relative z-10 animate-fade-in">
           {/* Title */}
