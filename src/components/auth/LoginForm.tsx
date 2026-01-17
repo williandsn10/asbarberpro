@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
@@ -123,6 +123,17 @@ export function LoginForm() {
                 Cadastre-se
               </Link>
             </p>
+
+            {/* Install app link */}
+            <div className="pt-4 border-t border-muted-foreground/20 mt-4">
+              <Link 
+                to="/install" 
+                className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Instalar app no celular
+              </Link>
+            </div>
           </form>
         </div>
       </div>
