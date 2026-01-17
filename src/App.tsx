@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { ClientLayout } from "@/components/layout/ClientLayout";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
+        <OfflineIndicator />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
