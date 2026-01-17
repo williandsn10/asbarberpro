@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Table,
   TableBody,
@@ -29,8 +30,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
 import { Search, Shield, ShieldCheck, User, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { MobileUserCard } from "@/components/admin/MobileUserCard";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -47,6 +50,7 @@ export default function Users() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -242,52 +246,62 @@ export default function Users() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gradient-gold">
+        <h1 className="text-xl sm:text-2xl font-bold text-gradient-gold">
           Gerenciamento de Usuários
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-sm sm:text-base">
           Gerencie permissões e acessos do sistema
         </p>
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por nome ou email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+      <Card className="glass-card">
+        <CardContent className="pt-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome ou email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 bg-secondary"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="border rounded-lg bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role Atual</TableHead>
-              <TableHead className="w-[200px]">Alterar Role</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+      {isLoading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      ) : filteredUsers?.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <User className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p>Nenhum usuário encontrado</p>
+        </div>
+      ) : isMobile ? (
+        <div className="space-y-3">
+          {filteredUsers?.map((userProfile) => (
+            <MobileUserCard
+              key={userProfile.id}
+              userProfile={userProfile}
+              isCurrentUser={userProfile.user_id === user?.id}
+              isPending={isPending}
+              onRoleChange={handleRoleChange}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="border rounded-lg bg-card">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
-                </TableCell>
+                <TableHead>Nome</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role Atual</TableHead>
+                <TableHead className="w-[200px]">Alterar Role</TableHead>
               </TableRow>
-            ) : filteredUsers?.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-center py-8 text-muted-foreground"
-                >
-                  Nenhum usuário encontrado
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredUsers?.map((userProfile) => (
+            </TableHeader>
+            <TableBody>
+              {filteredUsers?.map((userProfile) => (
                 <TableRow key={userProfile.id}>
                   <TableCell className="font-medium">
                     {userProfile.name}
@@ -337,11 +351,11 @@ export default function Users() {
                     </Select>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <Dialog
         open={confirmDialog?.open}

@@ -9,10 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Plus, Edit, Loader2, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Calendar, Plus, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileAppointmentCard } from "@/components/admin/MobileAppointmentCard";
 
 export default function Appointments() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -22,6 +24,7 @@ export default function Appointments() {
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ["appointments", filterDate],
@@ -63,38 +66,99 @@ export default function Appointments() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-3xl font-bold text-gradient-gold">Agendamentos</h1><p className="text-muted-foreground mt-1">Gerencie os horários marcados</p></div>
-        <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-gold"><Plus className="w-4 h-4 mr-2" />Novo Agendamento</Button>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gradient-gold">Agendamentos</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">Gerencie os horários marcados</p>
+        </div>
+        <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-gold w-full sm:w-auto">
+          <Plus className="w-4 h-4 mr-2" />
+          Novo Agendamento
+        </Button>
       </div>
 
       <Card className="glass-card">
-        <CardContent className="pt-6"><div className="flex items-center gap-4"><Label>Data:</Label><Input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-auto bg-secondary" /></div></CardContent>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <Label className="text-sm">Data:</Label>
+            <Input 
+              type="date" 
+              value={filterDate} 
+              onChange={(e) => setFilterDate(e.target.value)} 
+              className="w-full sm:w-auto bg-secondary" 
+            />
+          </div>
+        </CardContent>
       </Card>
 
       <Card className="glass-card">
-        <CardHeader><CardTitle className="flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" />Agendamentos - {format(new Date(filterDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Calendar className="w-5 h-5 text-primary" />
+            Agendamentos - {format(new Date(filterDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}
+          </CardTitle>
+        </CardHeader>
         <CardContent>
-          {isLoading ? <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div> : appointments.length === 0 ? <div className="text-center py-8 text-muted-foreground"><Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" /><p>Nenhum agendamento</p></div> : (
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : appointments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>Nenhum agendamento</p>
+            </div>
+          ) : isMobile ? (
+            <div className="space-y-3">
+              {appointments.map((apt: any) => (
+                <MobileAppointmentCard
+                  key={apt.id}
+                  appointment={apt}
+                  onAccept={(id) => updateStatusMutation.mutate({ id, status: "scheduled" })}
+                  onComplete={(id) => updateStatusMutation.mutate({ id, status: "completed" })}
+                  onCancel={(id) => updateStatusMutation.mutate({ id, status: "cancelled" })}
+                />
+              ))}
+            </div>
+          ) : (
             <Table>
-              <TableHeader><TableRow><TableHead>Horário</TableHead><TableHead>Cliente</TableHead><TableHead>Serviço</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Horário</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Serviço</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>
                 {appointments.map((apt: any) => (
                   <TableRow key={apt.id}>
                     <TableCell className="font-bold text-primary">{apt.appointment_time?.slice(0, 5)}</TableCell>
                     <TableCell>{apt.client?.name}</TableCell>
                     <TableCell>{apt.service?.name}</TableCell>
-                    
                     <TableCell>{getStatusBadge(apt.status)}</TableCell>
                     <TableCell className="text-right">
-                      {apt.status === "pending" && <>
-                        <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "scheduled" })} className="text-green-500" title="Aceitar"><CheckCircle className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "cancelled" })} className="text-destructive" title="Recusar"><XCircle className="w-4 h-4" /></Button>
-                      </>}
-                      {apt.status === "scheduled" && <>
-                        <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "completed" })} className="text-green-500" title="Concluir"><CheckCircle className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "cancelled" })} className="text-destructive" title="Cancelar"><XCircle className="w-4 h-4" /></Button>
-                      </>}
+                      {apt.status === "pending" && (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "scheduled" })} className="text-green-500" title="Aceitar">
+                            <CheckCircle className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "cancelled" })} className="text-destructive" title="Recusar">
+                            <XCircle className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
+                      {apt.status === "scheduled" && (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "completed" })} className="text-green-500" title="Concluir">
+                            <CheckCircle className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "cancelled" })} className="text-destructive" title="Cancelar">
+                            <XCircle className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
