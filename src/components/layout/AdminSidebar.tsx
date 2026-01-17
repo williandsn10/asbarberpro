@@ -24,6 +24,7 @@ import {
   Menu,
   Shield,
   CalendarOff,
+  Settings,
 } from "lucide-react";
 
 const menuItems = [
@@ -33,6 +34,7 @@ const menuItems = [
   { title: "Agendamentos", url: "/admin/agendamentos", icon: Calendar },
   { title: "Bloqueios", url: "/admin/bloqueios", icon: CalendarOff },
   { title: "Usuários", url: "/admin/usuarios", icon: Shield },
+  { title: "Configurações", url: "/admin/configuracoes", icon: Settings },
 ];
 
 export function AdminSidebar() {
