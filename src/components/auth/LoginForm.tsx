@@ -70,7 +70,7 @@ export function LoginForm() {
         <div className="w-full max-w-md relative z-10 animate-fade-in">
           {/* Title */}
           <h1 className="text-4xl sm:text-5xl font-bold italic text-center mb-10 text-foreground">
-            Sign in
+            Entrar
           </h1>
 
           {/* Form */}
@@ -78,7 +78,7 @@ export function LoginForm() {
             {/* Email input */}
             <input
               type="email"
-              placeholder="Email"
+              placeholder="E-mail"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -91,7 +91,7 @@ export function LoginForm() {
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Password"
+                placeholder="Senha"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -114,7 +114,7 @@ export function LoginForm() {
               to="#" 
               className="block text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              Forgot your password?
+              Esqueceu sua senha?
             </Link>
 
             {/* Submit button */}
@@ -126,10 +126,10 @@ export function LoginForm() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  Entrando...
                 </>
               ) : (
-                "Sign In"
+                "Entrar"
               )}
             </Button>
 
