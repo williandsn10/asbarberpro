@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { Calendar, Scissors, Clock, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
+import { PushNotificationToggle } from "@/components/notifications/PushNotificationToggle";
 export default function ClientDashboard() {
   const { profile } = useAuth();
 
@@ -41,6 +41,8 @@ export default function ClientDashboard() {
           ))}</div></CardContent>
         </Card>
       )}
+
+      <PushNotificationToggle />
     </div>
   );
 }
