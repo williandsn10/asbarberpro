@@ -96,6 +96,36 @@ export type Database = {
         }
         Relationships: []
       }
+      blocked_times: {
+        Row: {
+          blocked_date: string
+          created_at: string
+          end_time: string | null
+          id: string
+          is_full_day: boolean
+          reason: string | null
+          start_time: string | null
+        }
+        Insert: {
+          blocked_date: string
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          is_full_day?: boolean
+          reason?: string | null
+          start_time?: string | null
+        }
+        Update: {
+          blocked_date?: string
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          is_full_day?: boolean
+          reason?: string | null
+          start_time?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
