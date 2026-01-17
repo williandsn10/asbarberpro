@@ -46,7 +46,44 @@ export default function Appointments() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: "pending" | "scheduled" | "completed" | "cancelled" }) => { const { error } = await supabase.from("appointments").update({ status }).eq("id", id); if (error) throw error; },
+    mutationFn: async ({ id, status }: { id: string; status: "pending" | "scheduled" | "completed" | "cancelled" }) => { 
+      // First update the appointment status
+      const { data: appointment, error } = await supabase
+        .from("appointments")
+        .update({ status })
+        .eq("id", id)
+        .select("client_id, service:services(name), appointment_date, appointment_time")
+        .single();
+      
+      if (error) throw error;
+
+      // Send push notification to client
+      const notificationMessages: Record<string, string> = { 
+        scheduled: "Seu agendamento foi confirmado!", 
+        completed: "Obrigado pela visita! Esperamos vê-lo novamente.", 
+        cancelled: "Seu agendamento foi cancelado." 
+      };
+
+      if (notificationMessages[status] && appointment) {
+        try {
+          await supabase.functions.invoke("send-push-notification", {
+            body: {
+              user_id: appointment.client_id,
+              title: "BarberPro",
+              body: `${notificationMessages[status]} - ${appointment.service?.name || "Serviço"}`,
+              data: {
+                appointment_id: id,
+                status,
+                date: appointment.appointment_date,
+                time: appointment.appointment_time,
+              },
+            },
+          });
+        } catch (pushError) {
+          console.log("Push notification error (non-blocking):", pushError);
+        }
+      }
+    },
     onSuccess: (_, variables) => { 
       queryClient.invalidateQueries({ queryKey: ["appointments"] }); 
       const messages: Record<string, string> = { scheduled: "Agendamento aceito!", completed: "Agendamento concluído!", cancelled: "Agendamento cancelado!" };
