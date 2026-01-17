@@ -21,6 +21,7 @@ interface AuthContextType {
   profile: Profile | null;
   isLoading: boolean;
   isAdmin: boolean;
+  isAdminLoading: boolean;
   signUp: (email: string, password: string, name: string, phone?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminLoading, setIsAdminLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
@@ -102,16 +104,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (newSession?.user) {
           // Use setTimeout to avoid potential deadlocks
+          setIsAdminLoading(true);
           setTimeout(async () => {
             const profileData = await fetchProfile(newSession.user.id);
             setProfile(profileData);
             const adminStatus = await checkAdminRole(newSession.user.id);
             setIsAdmin(adminStatus);
+            setIsAdminLoading(false);
             setIsLoading(false);
           }, 0);
         } else {
           setProfile(null);
           setIsAdmin(false);
+          setIsAdminLoading(false);
           setIsLoading(false);
         }
       }
@@ -123,15 +128,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(existingSession?.user ?? null);
 
       if (existingSession?.user) {
+        setIsAdminLoading(true);
         Promise.all([
           fetchProfile(existingSession.user.id),
           checkAdminRole(existingSession.user.id)
         ]).then(([profileData, adminStatus]) => {
           setProfile(profileData);
           setIsAdmin(adminStatus);
+          setIsAdminLoading(false);
           setIsLoading(false);
         });
       } else {
+        setIsAdminLoading(false);
         setIsLoading(false);
       }
     });
@@ -206,6 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile,
         isLoading,
         isAdmin,
+        isAdminLoading,
         signUp,
         signIn,
         signOut,

@@ -4,9 +4,10 @@ import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
 export default function Login() {
-  const { user, isLoading, isAdmin } = useAuth();
+  const { user, isLoading, isAdmin, isAdminLoading } = useAuth();
 
-  if (isLoading) {
+  // Aguardar carregamento completo incluindo verificação de admin
+  if (isLoading || (user && isAdminLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -14,7 +15,7 @@ export default function Login() {
     );
   }
 
-  // Se já está logado, redirecionar baseado no role (não no profile)
+  // Só redirecionar quando isAdminLoading for false
   if (user) {
     return <Navigate to={isAdmin ? "/admin" : "/cliente"} replace />;
   }
