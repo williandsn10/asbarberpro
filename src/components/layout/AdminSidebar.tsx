@@ -26,6 +26,7 @@ import {
   CalendarOff,
   Settings,
 } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
@@ -47,9 +48,7 @@ export function AdminSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <Link to="/admin" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-gold rounded-lg flex items-center justify-center shadow-gold flex-shrink-0">
-            <Scissors className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img src={logo} alt="BarberPro" className="w-10 h-10 rounded-lg flex-shrink-0" />
           {!collapsed && (
             <div>
               <h1 className="font-bold text-lg text-gradient-gold">BarberPro</h1>
