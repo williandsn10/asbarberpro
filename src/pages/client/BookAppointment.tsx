@@ -11,19 +11,30 @@ import { Calendar, Scissors, Clock, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
-// Gerar slots de 30 em 30 minutos (08:00 às 19:00)
-const generateTimeSlots = (): string[] => {
+interface WorkingHours {
+  opening_time: string;
+  closing_time: string;
+  slot_interval: number;
+}
+
+// Gerar slots dinamicamente baseado nas configurações
+const generateTimeSlots = (openingTime: string, closingTime: string, interval: number): string[] => {
   const slots: string[] = [];
-  for (let hour = 8; hour <= 19; hour++) {
-    slots.push(`${hour.toString().padStart(2, "0")}:00`);
-    if (hour < 19) {
-      slots.push(`${hour.toString().padStart(2, "0")}:30`);
-    }
+  const [openHour, openMin] = openingTime.split(":").map(Number);
+  const [closeHour, closeMin] = closingTime.split(":").map(Number);
+  
+  let currentMinutes = openHour * 60 + openMin;
+  const endMinutes = closeHour * 60 + closeMin;
+  
+  while (currentMinutes < endMinutes) {
+    const hour = Math.floor(currentMinutes / 60);
+    const min = currentMinutes % 60;
+    slots.push(`${hour.toString().padStart(2, "0")}:${min.toString().padStart(2, "0")}`);
+    currentMinutes += interval;
   }
+  
   return slots;
 };
-
-const ALL_TIME_SLOTS = generateTimeSlots();
 
 export default function BookAppointment() {
   const { profile } = useAuth();
@@ -59,6 +70,25 @@ export default function BookAppointment() {
       return data;
     },
   });
+
+  // Buscar configurações de horário de funcionamento
+  const { data: workingHoursSettings } = useQuery({
+    queryKey: ["settings", "working_hours"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("settings")
+        .select("*")
+        .eq("key", "working_hours")
+        .maybeSingle();
+      return data?.value as unknown as WorkingHours | null;
+    },
+  });
+
+  // Gerar slots baseado nas configurações
+  const allTimeSlots = useMemo(() => {
+    const settings = workingHoursSettings || { opening_time: "08:00", closing_time: "19:00", slot_interval: 30 };
+    return generateTimeSlots(settings.opening_time, settings.closing_time, settings.slot_interval);
+  }, [workingHoursSettings]);
 
   // Buscar bloqueios para a data selecionada
   const { data: blockedTimes = [] } = useQuery({
@@ -98,7 +128,7 @@ export default function BookAppointment() {
   const availableSlots = useMemo(() => {
     if (!formData.appointment_date || isFullDayBlocked) return [];
 
-    return ALL_TIME_SLOTS.filter((slot) => {
+    return allTimeSlots.filter((slot) => {
       // Verificar se está em período bloqueado
       const isBlocked = blockedTimes.some((block: any) => {
         if (block.is_full_day) return true;
@@ -116,7 +146,7 @@ export default function BookAppointment() {
 
       return !isBlocked && !isBooked;
     });
-  }, [formData.appointment_date, blockedTimes, existingAppointments, isFullDayBlocked]);
+  }, [formData.appointment_date, blockedTimes, existingAppointments, isFullDayBlocked, allTimeSlots]);
 
   const selectedService = services.find((s: any) => s.id === formData.service_id);
 

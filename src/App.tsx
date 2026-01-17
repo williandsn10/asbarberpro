@@ -15,6 +15,7 @@ import Services from "./pages/admin/Services";
 import Appointments from "./pages/admin/Appointments";
 import BlockedTimes from "./pages/admin/BlockedTimes";
 import Users from "./pages/admin/Users";
+import AdminSettings from "./pages/admin/Settings";
 import ClientDashboard from "./pages/client/Dashboard";
 import BookAppointment from "./pages/client/BookAppointment";
 import MyAppointments from "./pages/client/MyAppointments";
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="agendamentos" element={<Appointments />} />
               <Route path="bloqueios" element={<BlockedTimes />} />
               <Route path="usuarios" element={<Users />} />
+              <Route path="configuracoes" element={<AdminSettings />} />
             </Route>
 
             {/* Client Routes */}
