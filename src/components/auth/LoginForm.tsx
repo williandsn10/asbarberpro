@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { GlowInput } from "@/components/ui/glow-input";
-import { Scissors, Eye, EyeOff, Loader2, Mail, Lock, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -69,78 +68,72 @@ export function LoginForm() {
         <div className="absolute inset-0 bg-mesh-gradient opacity-50" />
         
         <div className="w-full max-w-md relative z-10 animate-fade-in">
-          {/* Logo and header */}
-          <div className="text-center mb-8">
-            <div className="mx-auto w-16 h-16 bg-gradient-gold rounded-xl flex items-center justify-center shadow-gold mb-4 transform hover:scale-105 transition-transform duration-300">
-              <Scissors className="w-8 h-8 text-primary-foreground" />
-            </div>
-            <h1 className="text-3xl font-bold">
-              <span className="text-gradient-gold">BarberPro</span>
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Entre com suas credenciais para acessar
-            </p>
-          </div>
+          {/* Title */}
+          <h1 className="text-4xl sm:text-5xl font-bold italic text-center mb-10 text-foreground">
+            Sign in
+          </h1>
 
-          {/* Glass form card */}
-          <form onSubmit={handleSubmit} className="glass-card p-6 sm:p-8 rounded-2xl space-y-5">
-            <GlowInput
-              label="E-mail"
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email input */}
+            <input
               type="email"
-              placeholder="seu@email.com"
+              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              icon={<Mail className="w-4 h-4" />}
+              className="w-full h-14 px-4 bg-transparent border border-muted-foreground/30 
+                         rounded-lg focus:border-primary/50 focus:outline-none transition-colors
+                         text-foreground placeholder:text-muted-foreground"
             />
 
-            <GlowInput
-              label="Senha"
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              icon={<Lock className="w-4 h-4" />}
-              endIcon={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="hover:text-foreground transition-colors p-1"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              }
-            />
-
-            <div className="text-right">
-              <Link 
-                to="#" 
-                className="text-sm text-primary/80 hover:text-primary hover:underline transition-colors"
+            {/* Password input with toggle */}
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full h-14 px-4 pr-12 bg-transparent border border-muted-foreground/30 
+                           rounded-lg focus:border-primary/50 focus:outline-none transition-colors
+                           text-foreground placeholder:text-muted-foreground"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1}
               >
-                Esqueceu sua senha?
-              </Link>
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
 
+            {/* Forgot password - centered */}
+            <Link 
+              to="#" 
+              className="block text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Forgot your password?
+            </Link>
+
+            {/* Submit button */}
             <Button
               type="submit"
-              className="w-full bg-gradient-gold hover:opacity-90 text-primary-foreground font-semibold h-11 group"
+              className="w-full h-12 rounded-lg bg-muted-foreground/80 hover:bg-muted-foreground text-background font-semibold"
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verificando...
+                  Signing in...
                 </>
               ) : (
-                <>
-                  <span>Entrar</span>
-                  <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </>
+                "Sign In"
               )}
             </Button>
 
+            {/* Register link */}
             <p className="text-sm text-muted-foreground text-center pt-2">
               Não tem uma conta?{" "}
               <Link 
