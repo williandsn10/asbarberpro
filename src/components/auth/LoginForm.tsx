@@ -111,7 +111,7 @@ export function LoginForm() {
 
             {/* Forgot password - centered */}
             <Link 
-              to="#" 
+              to="/esqueci-senha" 
               className="block text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Esqueceu sua senha?
