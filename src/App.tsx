@@ -13,6 +13,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import Clients from "./pages/admin/Clients";
 import Services from "./pages/admin/Services";
 import Appointments from "./pages/admin/Appointments";
+import BlockedTimes from "./pages/admin/BlockedTimes";
 import Users from "./pages/admin/Users";
 import ClientDashboard from "./pages/client/Dashboard";
 import BookAppointment from "./pages/client/BookAppointment";
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="clientes" element={<Clients />} />
               <Route path="servicos" element={<Services />} />
               <Route path="agendamentos" element={<Appointments />} />
+              <Route path="bloqueios" element={<BlockedTimes />} />
               <Route path="usuarios" element={<Users />} />
             </Route>
 
