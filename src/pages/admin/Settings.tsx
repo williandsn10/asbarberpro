@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, Loader2, Save, AlertTriangle, Trash2 } from "lucide-react";
+import { Clock, Loader2, Save, AlertTriangle, Trash2, Bell } from "lucide-react";
+import { PushNotificationToggle } from "@/components/notifications/PushNotificationToggle";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -227,6 +228,22 @@ export default function Settings() {
         <h1 className="text-3xl font-bold text-gradient-gold">Configurações</h1>
         <p className="text-muted-foreground mt-1">Gerencie as configurações da barbearia</p>
       </div>
+
+      {/* Push Notifications Card */}
+      <Card className="glass-card max-w-2xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="w-5 h-5 text-primary" />
+            Notificações Push
+          </CardTitle>
+          <CardDescription>
+            Receba notificações mesmo quando o aplicativo estiver fechado
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PushNotificationToggle />
+        </CardContent>
+      </Card>
 
       <Card className="glass-card max-w-2xl">
         <CardHeader>

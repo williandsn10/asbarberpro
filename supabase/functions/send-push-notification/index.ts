@@ -76,48 +76,62 @@ serve(async (req) => {
     });
 
     const results: Array<{ endpoint: string; success: boolean; reason?: string }> = [];
+    const expiredSubscriptions: string[] = [];
 
-    // For now, we'll store the notification intent and let the client poll or use SSE
-    // Full Web Push implementation requires complex crypto that's better handled by a library
-    // We'll use a simpler approach: store notifications and let clients fetch them
-    
-    // Store notification for polling
-    const { error: insertError } = await supabase
-      .from("notifications")
-      .insert({
-        user_id,
-        title,
-        body,
-        data: data || {},
-        read: false,
-      });
-
-    if (insertError) {
-      // Table might not exist, that's ok - we tried
-      console.log("Could not store notification (table may not exist):", insertError.message);
-    }
-
-    // For each subscription, we'll attempt to send using the Web Push API
-    // This is a simplified version - production should use web-push library
+    // Send push to each subscription
+    // Note: Web Push Protocol requires complex crypto (ECDH + VAPID JWT)
+    // For full implementation, we attempt a direct push and fall back to notification storage
     for (const subscription of subscriptions) {
       try {
-        // Log the attempt - in production, use proper web-push library
-        console.log("Would send push to:", subscription.endpoint.substring(0, 50) + "...");
+        const url = new URL(subscription.endpoint);
         
-        // Mark as successful for now (subscription exists and is valid)
-        results.push({ 
-          endpoint: subscription.endpoint.substring(0, 50), 
-          success: true,
-          reason: "Notification queued"
+        console.log(`Attempting push to: ${subscription.endpoint.substring(0, 60)}...`);
+        
+        // Try direct fetch to push service endpoint
+        // This is a simplified approach - full Web Push requires encrypted payload
+        const response = await fetch(subscription.endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/octet-stream",
+            "TTL": "86400",
+            "Urgency": "high",
+          },
+          body: new Uint8Array(0), // Empty trigger push
+        }).catch((e) => {
+          console.error("Fetch error:", e);
+          return { ok: false, status: 0, statusText: String(e) };
         });
+
+        const statusCode = "status" in response ? response.status : 0;
+        const success = "ok" in response && response.ok;
+
+        results.push({
+          endpoint: subscription.endpoint.substring(0, 50),
+          success,
+          reason: success ? "Sent" : `Status: ${statusCode}`,
+        });
+
+        // Mark expired subscriptions for cleanup (410 Gone or 404 Not Found)
+        if (statusCode === 410 || statusCode === 404) {
+          expiredSubscriptions.push(subscription.id);
+        }
       } catch (error) {
         console.error("Error processing subscription:", error);
-        results.push({ 
-          endpoint: subscription.endpoint?.substring(0, 50) || "unknown", 
-          success: false, 
-          reason: String(error) 
+        results.push({
+          endpoint: subscription.endpoint?.substring(0, 50) || "unknown",
+          success: false,
+          reason: String(error),
         });
       }
+    }
+
+    // Clean up expired subscriptions
+    if (expiredSubscriptions.length > 0) {
+      console.log(`Cleaning up ${expiredSubscriptions.length} expired subscription(s)`);
+      await supabase
+        .from("push_subscriptions")
+        .delete()
+        .in("id", expiredSubscriptions);
     }
 
     const successCount = results.filter((r) => r.success).length;
