@@ -1,8 +1,12 @@
 import { Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
+import { useRealtimeAppointments } from "@/hooks/use-realtime-appointments";
 
 export function AdminLayout() {
+  // Listen for new pending appointments in realtime
+  useRealtimeAppointments();
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
