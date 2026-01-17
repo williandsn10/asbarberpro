@@ -34,35 +34,27 @@ export function LoginForm() {
       return;
     }
 
-    // Verificar role DIRETAMENTE na tabela user_roles antes de redirecionar
+    // Aguardar um momento para o AuthContext atualizar o estado
+    // Depois verificar role diretamente para garantir redirecionamento correto
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
-      console.log("Verificando role para usuário:", user.id);
-      
-      const { data: roleData, error: roleError } = await supabase
+      const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
         .eq("role", "admin")
         .maybeSingle();
       
-      if (roleError) {
-        console.error("Erro ao verificar role:", roleError);
-      }
-      
       const userIsAdmin = !!roleData;
-      console.log("Resultado da verificação - É admin?", userIsAdmin, roleData);
       
       toast({
         title: "Bem-vindo!",
         description: "Login realizado com sucesso.",
       });
 
-      // Redirecionar baseado na verificação direta da tabela
-      const destination = userIsAdmin ? "/admin" : "/cliente";
-      console.log("Redirecionando para:", destination);
-      navigate(destination, { replace: true });
+      // Redirecionar imediatamente baseado na verificação
+      navigate(userIsAdmin ? "/admin" : "/cliente", { replace: true });
     } else {
       toast({
         title: "Erro",

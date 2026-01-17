@@ -4,7 +4,7 @@ import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
 export default function Login() {
-  const { user, profile, isLoading, isAdmin } = useAuth();
+  const { user, isLoading, isAdmin } = useAuth();
 
   if (isLoading) {
     return (
@@ -14,8 +14,8 @@ export default function Login() {
     );
   }
 
-  // Se já está logado, redirecionar baseado no tipo
-  if (user && profile) {
+  // Se já está logado, redirecionar baseado no role (não no profile)
+  if (user) {
     return <Navigate to={isAdmin ? "/admin" : "/cliente"} replace />;
   }
 
