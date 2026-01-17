@@ -215,30 +215,30 @@ export default function Clients() {
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gradient-gold">Clientes</h1>
-          <p className="text-muted-foreground mt-1">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gradient-gold">Clientes</h1>
+          <p className="text-muted-foreground mt-1 hidden sm:block">
             Gerencie os clientes da barbearia
           </p>
         </div>
-        <Button onClick={handleCreateClient} className="bg-gradient-gold">
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Cliente
+        <Button onClick={handleCreateClient} className="bg-gradient-gold shrink-0">
+          <Plus className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">Novo Cliente</span>
         </Button>
       </div>
 
       {/* Search */}
       <Card className="glass-card">
-        <CardContent className="pt-6">
+        <CardContent className="p-4 sm:pt-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome, e-mail ou telefone..."
+              placeholder="Buscar cliente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-secondary"
+              className="pl-10 bg-secondary h-11"
             />
           </div>
         </CardContent>
