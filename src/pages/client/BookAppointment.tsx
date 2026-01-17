@@ -3,11 +3,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Scissors, Clock, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, Scissors, Clock, Loader2 } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
@@ -264,22 +264,46 @@ export default function BookAppointment() {
         <Card className="glass-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-primary" />
+              <CalendarIcon className="w-5 h-5 text-primary" />
               Escolha a Data e Horário
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label>Data</Label>
-              <Input
-                type="date"
-                min={new Date().toISOString().split("T")[0]}
-                value={formData.appointment_date}
-                onChange={(e) =>
-                  setFormData({ ...formData, appointment_date: e.target.value, appointment_time: "" })
-                }
-                className="bg-secondary"
-              />
+              <div className="flex justify-center">
+                <Calendar
+                  mode="single"
+                  selected={formData.appointment_date ? new Date(formData.appointment_date + "T00:00:00") : undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      const formatted = date.toISOString().split("T")[0];
+                      setFormData({ ...formData, appointment_date: formatted, appointment_time: "" });
+                    }
+                  }}
+                  disabled={(date) => {
+                    // Desabilitar datas passadas
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    if (date < today) return true;
+                    // Desabilitar dias fechados da semana
+                    if (closedDays.includes(date.getDay())) return true;
+                    return false;
+                  }}
+                  className="rounded-md border bg-secondary/50 pointer-events-auto"
+                />
+              </div>
+              {formData.appointment_date && (
+                <p className="text-center text-sm text-muted-foreground">
+                  Data selecionada: <span className="text-primary font-medium">
+                    {new Date(formData.appointment_date + "T00:00:00").toLocaleDateString("pt-BR", { 
+                      weekday: 'long', 
+                      day: 'numeric', 
+                      month: 'long' 
+                    })}
+                  </span>
+                </p>
+              )}
             </div>
 
             {formData.appointment_date && (
