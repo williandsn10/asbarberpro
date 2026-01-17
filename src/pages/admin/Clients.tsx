@@ -34,6 +34,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Plus, Search, Edit, Trash2, Phone, Mail, Calendar, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileClientCard } from "@/components/admin/MobileClientCard";
 import { useToast } from "@/hooks/use-toast";
 
 interface Client {
@@ -56,6 +58,7 @@ export default function Clients() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["clients", searchTerm],
@@ -266,6 +269,21 @@ export default function Clients() {
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar primeiro cliente
               </Button>
+            </div>
+          ) : isMobile ? (
+            <div className="space-y-3">
+              {clients.map((client) => (
+                <MobileClientCard
+                  key={client.id}
+                  client={client}
+                  lastVisit={lastVisits[client.id]}
+                  onEdit={handleEditClient}
+                  onDelete={(c) => {
+                    setSelectedClient(c);
+                    setIsDeleteDialogOpen(true);
+                  }}
+                />
+              ))}
             </div>
           ) : (
             <div className="overflow-x-auto">
