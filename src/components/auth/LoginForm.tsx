@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -7,25 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Scissors, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [awaitingRedirect, setAwaitingRedirect] = useState(false);
-  const { signIn, isAdmin, profile, isLoading: authLoading } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Redirecionar após login bem-sucedido quando o perfil e isAdmin carregarem
-  useEffect(() => {
-    if (awaitingRedirect && profile && !authLoading) {
-      const destination = isAdmin ? "/admin" : "/cliente";
-      console.log("Redirecionando para:", destination, "| isAdmin:", isAdmin);
-      navigate(destination, { replace: true });
-    }
-  }, [awaitingRedirect, profile, isAdmin, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,12 +34,44 @@ export function LoginForm() {
       return;
     }
 
-    toast({
-      title: "Bem-vindo!",
-      description: "Login realizado com sucesso.",
-    });
+    // Verificar role DIRETAMENTE na tabela user_roles antes de redirecionar
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      console.log("Verificando role para usuário:", user.id);
+      
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      
+      if (roleError) {
+        console.error("Erro ao verificar role:", roleError);
+      }
+      
+      const userIsAdmin = !!roleData;
+      console.log("Resultado da verificação - É admin?", userIsAdmin, roleData);
+      
+      toast({
+        title: "Bem-vindo!",
+        description: "Login realizado com sucesso.",
+      });
 
-    setAwaitingRedirect(true);
+      // Redirecionar baseado na verificação direta da tabela
+      const destination = userIsAdmin ? "/admin" : "/cliente";
+      console.log("Redirecionando para:", destination);
+      navigate(destination, { replace: true });
+    } else {
+      toast({
+        title: "Erro",
+        description: "Não foi possível obter dados do usuário.",
+        variant: "destructive",
+      });
+    }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -110,12 +133,12 @@ export function LoginForm() {
             <Button
               type="submit"
               className="w-full bg-gradient-gold hover:opacity-90 text-primary-foreground font-semibold"
-              disabled={isLoading || awaitingRedirect}
+              disabled={isLoading}
             >
-              {isLoading || awaitingRedirect ? (
+              {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {awaitingRedirect ? "Carregando perfil..." : "Entrando..."}
+                  Verificando...
                 </>
               ) : (
                 "Entrar"
