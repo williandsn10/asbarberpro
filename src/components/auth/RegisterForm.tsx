@@ -3,8 +3,9 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { GlowInput } from "@/components/ui/glow-input";
-import { Scissors, Eye, EyeOff, Loader2, Mail, Lock, User, Phone, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, Lock, User, Phone, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import logo from "@/assets/logo.png";
 
 export function RegisterForm() {
   const [name, setName] = useState("");
@@ -106,9 +107,7 @@ export function RegisterForm() {
         <div className="w-full max-w-md relative z-10 animate-fade-in">
           {/* Logo and header */}
           <div className="text-center mb-6">
-            <div className="mx-auto w-16 h-16 bg-gradient-gold rounded-xl flex items-center justify-center shadow-gold mb-4 transform hover:scale-105 transition-transform duration-300">
-              <Scissors className="w-8 h-8 text-primary-foreground" />
-            </div>
+            <img src={logo} alt="BarberPro" className="mx-auto w-20 h-20 object-contain mb-4" />
             <h1 className="text-3xl font-bold">
               <span className="text-gradient-gold">BarberPro</span>
             </h1>
