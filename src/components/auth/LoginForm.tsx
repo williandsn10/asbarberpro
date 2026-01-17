@@ -2,10 +2,8 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Scissors, Eye, EyeOff, Loader2 } from "lucide-react";
+import { GlowInput } from "@/components/ui/glow-input";
+import { Scissors, Eye, EyeOff, Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -34,8 +32,6 @@ export function LoginForm() {
       return;
     }
 
-    // Aguardar um momento para o AuthContext atualizar o estado
-    // Depois verificar role diretamente para garantir redirecionamento correto
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
@@ -53,7 +49,6 @@ export function LoginForm() {
         description: "Login realizado com sucesso.",
       });
 
-      // Redirecionar imediatamente baseado na verificação
       navigate(userIsAdmin ? "/admin" : "/cliente", { replace: true });
     } else {
       toast({
@@ -67,64 +62,70 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md glass-card animate-fade-in">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-gradient-gold rounded-xl flex items-center justify-center shadow-gold">
-            <Scissors className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <div>
-            <CardTitle className="text-2xl font-bold">
-              <span className="text-gradient-gold">BarberPro</span>
-            </CardTitle>
-            <CardDescription className="mt-2">
-              Entre com suas credenciais para acessar
-            </CardDescription>
-          </div>
-        </CardHeader>
-
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-secondary"
-              />
+    <div className="min-h-screen flex">
+      {/* Left side - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 bg-background relative">
+        {/* Subtle gradient background */}
+        <div className="absolute inset-0 bg-mesh-gradient opacity-50" />
+        
+        <div className="w-full max-w-md relative z-10 animate-fade-in">
+          {/* Logo and header */}
+          <div className="text-center mb-8">
+            <div className="mx-auto w-16 h-16 bg-gradient-gold rounded-xl flex items-center justify-center shadow-gold mb-4 transform hover:scale-105 transition-transform duration-300">
+              <Scissors className="w-8 h-8 text-primary-foreground" />
             </div>
+            <h1 className="text-3xl font-bold">
+              <span className="text-gradient-gold">BarberPro</span>
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Entre com suas credenciais para acessar
+            </p>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="bg-secondary pr-10"
-                />
+          {/* Glass form card */}
+          <form onSubmit={handleSubmit} className="glass-card p-6 sm:p-8 rounded-2xl space-y-5">
+            <GlowInput
+              label="E-mail"
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              icon={<Mail className="w-4 h-4" />}
+            />
+
+            <GlowInput
+              label="Senha"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              icon={<Lock className="w-4 h-4" />}
+              endIcon={
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="hover:text-foreground transition-colors p-1"
+                  tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
-              </div>
-            </div>
-          </CardContent>
+              }
+            />
 
-          <CardFooter className="flex flex-col gap-4">
+            <div className="text-right">
+              <Link 
+                to="#" 
+                className="text-sm text-primary/80 hover:text-primary hover:underline transition-colors"
+              >
+                Esqueceu sua senha?
+              </Link>
+            </div>
+
             <Button
               type="submit"
-              className="w-full bg-gradient-gold hover:opacity-90 text-primary-foreground font-semibold"
+              className="w-full bg-gradient-gold hover:opacity-90 text-primary-foreground font-semibold h-11 group"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -133,19 +134,47 @@ export function LoginForm() {
                   Verificando...
                 </>
               ) : (
-                "Entrar"
+                <>
+                  <span>Entrar</span>
+                  <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </>
               )}
             </Button>
 
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="text-sm text-muted-foreground text-center pt-2">
               Não tem uma conta?{" "}
-              <Link to="/cadastro" className="text-primary hover:underline font-medium">
+              <Link 
+                to="/cadastro" 
+                className="text-primary hover:underline font-medium"
+              >
                 Cadastre-se
               </Link>
             </p>
-          </CardFooter>
-        </form>
-      </Card>
+          </form>
+        </div>
+      </div>
+
+      {/* Right side - Image (hidden on mobile) */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=1200&q=80"
+          alt="Barbearia moderna"
+          className="w-full h-full object-cover"
+        />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
+        
+        {/* Decorative elements */}
+        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-background/80 to-transparent" />
+        
+        {/* Floating quote */}
+        <div className="absolute bottom-12 left-8 right-8 glass-card p-6 rounded-xl max-w-md">
+          <p className="text-foreground/90 italic text-lg">
+            "A melhor experiência em barbearia que você pode ter."
+          </p>
+          <p className="text-primary mt-2 font-medium">— BarberPro</p>
+        </div>
+      </div>
     </div>
   );
 }
