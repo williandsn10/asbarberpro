@@ -60,7 +60,10 @@ self.addEventListener("notificationclick", (event) => {
   // If this is a new appointment notification for admins, redirect to admin page
   if (notificationData.type === "new_appointment") {
     targetUrl = notificationData.url || "/admin/agendamentos";
-  } else if (notificationData.url) {
+ } else if (notificationData.status) {
+   // Client notification about their appointment status change
+   targetUrl = "/cliente/meus-agendamentos";
+ } else if (notificationData.url) {
     targetUrl = notificationData.url;
   }
 
