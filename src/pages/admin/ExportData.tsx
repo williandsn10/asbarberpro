@@ -54,6 +54,41 @@ function downloadCSV(csv: string, filename: string) {
 
 const tableSQLSchemas: { name: string; sql: string }[] = [
   {
+    name: "barbers",
+    sql: `CREATE TABLE public.barbers (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.barbers ENABLE ROW LEVEL SECURITY;`,
+  },
+  {
+    name: "services",
+    sql: `CREATE TABLE public.services (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  price NUMERIC NOT NULL,
+  duration_minutes INTEGER NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;`,
+  },
+  {
+    name: "user_roles",
+    sql: `CREATE TABLE public.user_roles (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL,
+  role app_role NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;`,
+  },
+  {
     name: "profiles",
     sql: `CREATE TABLE public.profiles (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -86,30 +121,6 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;`,
 ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;`,
   },
   {
-    name: "services",
-    sql: `CREATE TABLE public.services (
-  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  price NUMERIC NOT NULL,
-  duration_minutes INTEGER NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;`,
-  },
-  {
-    name: "barbers",
-    sql: `CREATE TABLE public.barbers (
-  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-ALTER TABLE public.barbers ENABLE ROW LEVEL SECURITY;`,
-  },
-  {
     name: "blocked_times",
     sql: `CREATE TABLE public.blocked_times (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -122,17 +133,6 @@ ALTER TABLE public.barbers ENABLE ROW LEVEL SECURITY;`,
 );
 
 ALTER TABLE public.blocked_times ENABLE ROW LEVEL SECURITY;`,
-  },
-  {
-    name: "user_roles",
-    sql: `CREATE TABLE public.user_roles (
-  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL,
-  role app_role NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;`,
   },
   {
     name: "settings",
@@ -168,7 +168,7 @@ CREATE TYPE public.app_role AS ENUM ('admin', 'user');
 CREATE TYPE public.appointment_status AS ENUM ('pending', 'scheduled', 'completed', 'cancelled');
 `;
 
-const functionsSQL = `-- Funções auxiliares
+const functionsSQL = `-- Funções auxiliares (criar DEPOIS das tabelas)
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS trigger LANGUAGE plpgsql SET search_path TO 'public' AS $$
 BEGIN
@@ -186,7 +186,7 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
 $$;
 `;
 
-const fullSQL = [enumsSQL, functionsSQL, ...tableSQLSchemas.map(t => `-- Tabela: ${t.name}\n${t.sql}`)].join("\n\n");
+const fullSQL = [enumsSQL, ...tableSQLSchemas.map(t => `-- Tabela: ${t.name}\n${t.sql}`), functionsSQL].join("\n\n");
 
 export default function ExportData() {
   const [loading, setLoading] = useState<string | null>(null);
