@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, Users, Scissors, Calendar, LogOut, Menu, Shield, CalendarOff, Settings } from "lucide-react";
+import { LayoutDashboard, Users, Scissors, Calendar, LogOut, Menu, Shield, CalendarOff, Settings, Download } from "lucide-react";
 import logo from "@/assets/logo.png";
 const menuItems = [{
   title: "Dashboard",
@@ -36,6 +36,10 @@ const menuItems = [{
   title: "Configurações",
   url: "/admin/configuracoes",
   icon: Settings
+}, {
+  title: "Exportar Dados",
+  url: "/admin/exportar",
+  icon: Download
 }];
 export function AdminSidebar() {
   const location = useLocation();
